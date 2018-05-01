@@ -19,6 +19,8 @@
 
 package com.romanenco.gitt.git;
 
+import android.util.Log;
+import com.romanenco.gitt.GittApp;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -29,12 +31,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.CommitCommand;
+import org.eclipse.jgit.api.CreateBranchCommand;
+import org.eclipse.jgit.api.DeleteBranchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.InitCommand;
+import org.eclipse.jgit.api.ListTagCommand;
+import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.TagCommand;
 import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
@@ -46,10 +55,6 @@ import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
-import android.util.Log;
-
-import com.romanenco.gitt.GittApp;
 
 /**
  * Common GIT operations based on jgit.
@@ -63,7 +68,7 @@ public class GitHelper {
 
 	/**
 	 * Clone remote HTTP/S repo to local file system.
-	 * 
+	 * 克隆
 	 * @param url
 	 * @param localPath
 	 * @param user
@@ -122,7 +127,7 @@ public class GitHelper {
 	
 	/**
 	 * Folder size in bytes.
-	 * 
+	 * 获取一个文件夹的大小
 	 * @param localPath
 	 * @return
 	 */
@@ -133,7 +138,7 @@ public class GitHelper {
 	
 	/**
 	 * Current branch/tag name.
-	 * 
+	 * 获取当前的分支/标签名
 	 * @param path
 	 * @return
 	 */
@@ -166,7 +171,7 @@ public class GitHelper {
 	
 	/**
 	 * List all branches and tags in a repo.
-	 * 
+	 * 列出所有分支 和标签
 	 * @param branches
 	 * @param tags
 	 * @param path
@@ -202,9 +207,26 @@ public class GitHelper {
 		}
 	}
 	
+	/*
+	对一个文件夹创建一个空项目
+  */
+	
+	public static void init(String localPath) throws GitError
+	{
+	try {
+	Git git = Git.open(new File(localPath));
+	InitCommand co = git.init();
+	co.setDirectory(new File(localPath));
+	co.call();
+	} catch (Exception e) {
+	GittApp.saveErrorTrace(e);
+	throw new GitError();
+	}
+	}
+	
 	/**
 	 * Delete local repo.
-	 * 
+	 * 删除项目
 	 * @param localPath
 	 * @throws IOException
 	 */
@@ -214,7 +236,7 @@ public class GitHelper {
 	
 	/**
 	 * Checkout specific branch or tag.
-	 * 
+	 * 切换分支
 	 * @param localPath
 	 * @param name
 	 * @throws GitError
@@ -231,9 +253,125 @@ public class GitHelper {
 		}
 	}
 	
+	/*
+	打tag
+	*/
+	
+	public static void tag(String localPath,String tagName, String message) throws GitError
+	{
+	try {
+	Git git = Git.open(new File(localPath));
+	TagCommand co = git.tag();
+	co.setName(tagName);
+	co.setMessage(message);
+	co.call();
+	} catch (Exception e) {
+	GittApp.saveErrorTrace(e);
+	throw new GitError();
+	}
+	}
+	/*
+	获取标签列表
+	*/
+	public static List<org.eclipse.jgit.lib.Ref> tagList(String localPath) throws GitError
+	{
+	try {
+	Git git = Git.open(new File(localPath));
+	ListTagCommand co = git.tagList();
+	
+	return co.call();
+	} catch (Exception e) {
+	GittApp.saveErrorTrace(e);
+	throw new GitError();
+	}
+	}
+	
+	/*
+	提交代码
+	*/
+	public static void commit(String localPath,String message) throws GitError
+	{
+	try {
+	Git git = Git.open(new File(localPath));
+	CommitCommand co = git.commit();
+	co.setMessage(message);
+	co.call();
+	} catch (Exception e) {
+	GittApp.saveErrorTrace(e);
+	throw new GitError();
+	}
+	}
+	
+	
+	/*
+	推送
+	
+	*/
+	public static void push(String localPath) throws GitError
+	{
+	    try {
+	    Git git = Git.open(new File(localPath));
+	    PushCommand co = git.push();
+	    co.setPushAll();
+	    co.call();
+	    } catch (Exception e) {
+	    GittApp.saveErrorTrace(e);
+    	throw new GitError();
+    	}
+	}
+	
+	/*
+	创建分支
+	*/
+	public static void createBranch(String localPath,String name) throws GitError
+	{
+	try {
+	Git git = Git.open(new File(localPath));
+	CreateBranchCommand co = git.branchCreate();
+	co.setName(name);
+	co.call();
+	} catch (Exception e) {
+	GittApp.saveErrorTrace(e);
+	throw new GitError();
+	}
+	}
+	
+	/*
+	 删除分支
+	 */
+	public static void deleteBranch(String localPath,String name) throws GitError
+	{
+	try {
+	Git git = Git.open(new File(localPath));
+	DeleteBranchCommand co = git.branchDelete();
+	co.setBranchNames(new String[]{name});
+	co.call();
+	} catch (Exception e) {
+	GittApp.saveErrorTrace(e);
+	throw new GitError();
+	}
+	}
+	/*
+	合并分支
+	*/
+	public static void mergeBranch(String localPath,String name) throws GitError
+	{
+	try {
+	Git git = Git.open(new File(localPath));
+	MergeCommand co = git.merge();
+	
+	co.call();
+	} catch (Exception e) {
+	GittApp.saveErrorTrace(e);
+	throw new GitError();
+	}
+	}
+	
+	
+	
 	/**
 	 * Pull repo.
-	 * 
+	 * 拉
 	 * @param localPath
 	 * @param user
 	 * @param password
@@ -286,7 +424,7 @@ public class GitHelper {
 	
 	/**
 	 * Read log messages, up to maxRecords
-	 * 
+	 * 读取log
 	 * @param repoPath
 	 * @param maxRecords
 	 * @return

@@ -54,7 +54,10 @@ public class GitService extends IntentService {
 	 * Supported operations
 	 */
 	public enum Command {
-		Clone, Checkout, Pull, Delete
+		Clone, //克隆
+		Checkout, //切换
+		Pull, //拉取
+		Delete //删除提交
 	}
 
 	public static final String BROADCAST_REFRESH = "com.romanenco.gitviewer.GitService.REFRESH";
